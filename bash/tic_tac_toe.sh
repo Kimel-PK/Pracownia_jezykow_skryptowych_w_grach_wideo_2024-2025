@@ -1,15 +1,15 @@
 #!/bin/bash
 
 current_player=0
-board=(" " " " " " " " " " " " " " " ")
+board=(" " " " " " " " " " " " " " " " " ")
 
 print_board() {
-    printf "%s\n" "   1   2   3"
-    printf "A  %s | %s | %s\n" "${board[0]}" "${board[1]}" "${board[2]}"
-    printf "%s\n" "  ---+---+---"
-    printf "B  %s | %s | %s\n" "${board[3]}" "${board[4]}" "${board[5]}"
-    printf "%s\n" "  ---+---+---"
-    printf "C  %s | %s | %s\n\n" "${board[6]}" "${board[7]}" "${board[8]}"
+    echo "   1   2   3"
+    echo "A  ${board[0]} | ${board[1]} | ${board[2]}"
+    echo "  ---+---+---"
+    echo "B  ${board[3]} | ${board[4]} | ${board[5]}"
+    echo "  ---+---+---"
+    echo "C  ${board[6]} | ${board[7]} | ${board[8]}"
 }
 
 check_win() {
@@ -34,15 +34,17 @@ check_win() {
 
 check_draw() {
     for i in "${board[@]}"; do
-        if [[ "$i" == " " ]]; then return 1; fi
+        if [[ "$i" == " " ]]; then
+            return 1;
+        fi
     done
     return 0
 }
 
 cell_to_number() {
-    local input="$1"
-    local row=${input:0:1}
-    local col=${input:1:1}
+    local cell="$1"
+    local row=${cell:0:1}
+    local col=${cell:1:1}
 
     local cell_index
     case "$row" in
@@ -70,12 +72,54 @@ player_to_symbol() {
     fi
 }
 
+save_game() {
+    game_state=$current_player
+    for i in "${board[@]}"; do
+        if [[ "$i" == " " ]]; then
+            game_state+="-"
+        else
+            game_state+=$i
+        fi
+    done
+    echo -e "\033[32mGame saved:\033[0m"
+    echo -e "\033[32m$game_state\033[0m"
+    echo -e "\033[32mUse this string to load game later\033[0m"
+    echo ""
+}
+
+load_game() {
+    echo "Insert game state string:"
+    read -r input
+    current_player=${input:0:1}
+    local cells=${input:1:9}
+    for (( i=0; i<${#cells}; i++ )); do
+        char="${cells:$i:1}"
+        if [[ "$char" == "-" ]]; then
+            board[$i]=" "
+        else
+            board[$i]=$char
+        fi
+    done
+    echo "Game loaded"
+    echo ""
+}
+
 while true; do
     print_board
     echo "Player $((current_player + 1))"
+    echo "S - save game, L - load game\n"
     echo "Choose cell (ex. A1):"
-    read -r cell_input
-    cell=$(cell_to_number $cell_input)
+    read -r input
+    
+    if [[ "$input" == "S" ]]; then
+        save_game
+        continue
+    elif [[ "$input" == "L" ]]; then
+        load_game
+        continue
+    fi
+    
+    cell=$(cell_to_number $input)
     if ! [[ "$cell" =~ ^[0-9]$ ]]; then
         echo "Cell does not exists"
         continue
@@ -88,11 +132,13 @@ while true; do
 
     if check_win; then
         print_board
-        echo "Player $((current_player + 1)) wins!"
+        echo ""
+        echo -e "\033[32mPlayer $((current_player + 1)) wins!\033[0m"
         break
     elif check_draw; then
         print_board
-        echo "Draw"
+        echo ""
+        echo -e "\033[33mDraw\033[0m"
         break
     fi
 
