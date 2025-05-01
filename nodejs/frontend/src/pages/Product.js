@@ -16,11 +16,33 @@ function Product() {
         })
     }, [id])
     
+    let cart = JSON.parse(sessionStorage.getItem('cart')) != null ? JSON.parse(sessionStorage.getItem('cart')) : {products: []};
+    let cartItemCount = 0
+    cart.products.forEach(function(productData, index) {
+        cartItemCount += productData.amount
+    })
+    
     function addToCart (id, name) {
+        const product = cart.products.find(product => product.id === id)
+  
+        if (product) {
+            product.amount += 1
+        } else {
+            cart.products.push({
+                id: id,
+                amount: 1
+            })
+        }
+        
+        sessionStorage.setItem('cart', JSON.stringify(cart))
+        cartItemCount = 0
+        cart.products.forEach(function(productData, index) {
+            cartItemCount += productData.amount
+        })
+        document.getElementById('shopping-cart-item-number').textContent = `Shopping cart (${cartItemCount})`
         alert(`${name} added to cart! Neat choice!`)
     }
     
-    // html
     return (
         <main>
             <div className='header-cart-bar'>
@@ -28,7 +50,7 @@ function Product() {
                     <Row>
                         <div className='text-right'>
                             <div className='go-to-cart-button' onClick={() => {navigate(`/cart`)}}>
-                                <p>Shopping cart (0)</p>
+                                <p id='shopping-cart-item-number'>Shopping cart ({cartItemCount})</p>
                                 <img src='https://icon-library.com/images/white-shopping-cart-icon/white-shopping-cart-icon-9.jpg' alt='shopping cart'></img>
                             </div>
                         </div>
@@ -36,12 +58,12 @@ function Product() {
                 </Container>
             </div>
             <Container>
-                <div className='big-button'>
-                    <p onClick={() => {navigate('/')}}>&lt;-- Return to shop</p>
-                </div>
                 {product.map((productData, key) => {
                     return (
                         <div key={ key } className='product-info'>
+                            <div className='big-button'>
+                                <p onClick={() => {navigate(`/category/${productData.categoryId}`)}}>← Return to category</p>
+                            </div>
                             <Row>
                                 <h2 className='text-center'>{productData.name}</h2>
                             </Row>

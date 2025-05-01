@@ -107,6 +107,43 @@ span {
     object-fit: contain;
 }
 
+/* Cart */
+
+.cart-item {
+    padding: 15px 20px;
+}
+
+.cart-item:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+.cart-item-photo img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+
+.cart-item .col-md-4, .cart-item .col-md-2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-from-cart {
+    padding: 0 10px;
+    border: 2px solid rgb(206, 0, 0);
+    border-radius: 10px;
+    background-color: red;
+    color: white;
+    font-size: 30px;
+    font-weight: 900;
+}
+
+.remove-from-cart:hover {
+    border: 2px solid rgb(107, 0, 0);
+    background-color: rgb(190, 0, 0);
+}
+
 /* Header */
 
 .header {

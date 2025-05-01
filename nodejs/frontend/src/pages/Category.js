@@ -2,37 +2,31 @@ import React from 'react'
 // uruchamia zapytania do endpointów
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { Container, Row, Col } from 'react-bootstrap'
 
-function Home() {
+function Category() {
     
     let navigate = useNavigate()
-    const [categoryList, getCategoryList] = useState([])
+    const [category, getCategory] = useState([])
     const [productsList, getProductsList] = useState([])
     
+    const { id } = useParams()
+    
     useEffect(() => {
-        axios.get('http://localhost:3001/category').then((response) => {
-            getCategoryList(response.data)
+        axios.get(`http://localhost:3001/category/id/${id}`).then((response) => {
+            getCategory(response.data)
         })
-        axios.get('http://localhost:3001/products').then((response) => {
+        axios.get(`http://localhost:3001/category/${id}/products`).then((response) => {
             getProductsList(response.data)
         })
-    }, [])
+    }, [id])
     
     let cart = JSON.parse(sessionStorage.getItem('cart')) != null ? JSON.parse(sessionStorage.getItem('cart')) : {products: []};
     let cartItemCount = 0
     cart.products.forEach(function(productData, index) {
         cartItemCount += productData.amount
     })
-    
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array
-    }
     
     return (
         <main>
@@ -48,33 +42,26 @@ function Home() {
                     </Row>
                 </Container>
             </div>
+            <div className='big-button'>
+                <p onClick={() => {navigate(`/`)}}>← Return to home page</p>
+            </div>
             <Container>
+                {category.map((categoryData, key) => {
+                    return (
+                        <div key={ key }>
+                            <Row>
+                                <h2 className='text-center'>
+                                    {categoryData.name}
+                                </h2>
+                            </Row>
+                            <Row>
+                                <Col md='12' dangerouslySetInnerHTML={{ __html: categoryData.description }}></Col>
+                            </Row>
+                        </div>
+                    )
+                })}
                 <Row>
-                    <h2 className='text-center'>Categories</h2>
-                </Row>
-                <Row>
-                    {categoryList.map((category, key) => {
-                        return (
-                            <Col md='4' key={ key } className='product-card' onClick={() => {navigate(`/category/${category.id}`)}}>
-                                <div className='product-card-inner'>
-                                    <Col md='4' className='product-card-photo'>
-                                        <img src={category.imgUrl} alt='Epic category' />
-                                    </Col>
-                                    <Row>
-                                        <div className='product-name'>
-                                            <h3 className="text-center">{category.name}</h3>
-                                        </div>
-                                    </Row>
-                                </div>
-                            </Col>
-                        )
-                    })}
-                </Row>
-                <Row>
-                    <h2 className='text-center'>All products</h2>
-                </Row>
-                <Row>
-                    {shuffleArray(productsList).map((product, key) => {
+                    {productsList.map((product, key) => {
                         return (
                             <Col md='4' key={ key } className='product-card' onClick={() => {navigate(`/product/${product.id}`)}}>
                                 <div className='product-card-inner'>
@@ -101,4 +88,4 @@ function Home() {
     )
 }
 
-export default Home
+export default Category

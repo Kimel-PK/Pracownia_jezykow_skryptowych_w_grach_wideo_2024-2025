@@ -2,6 +2,7 @@ import './main.css';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom'
 import Home from './pages/Home'
 import Product from './pages/Product'
+import Category from './pages/Category'
 import Cart from './pages/Cart'
 import { Container, Row, Col } from 'react-bootstrap'
 
@@ -17,7 +18,7 @@ function App() {
                                     <img className='logo' src='https://cdn.pixabay.com/photo/2019/12/14/15/24/bread-4695117_960_720.png' alt='logo' />
                                 </Link>
                             </Col>
-                            <Col md='4' className='name'>
+                            <Col md='4' className='name text-center'>
                                 <h1>Bread Shop</h1>
                             </Col>
                             <Col md='4'>
@@ -32,6 +33,7 @@ function App() {
                 <Routes>
                     <Route path='/' exact element={<Home />} />
                     <Route path='/product/:id' element={<Product />} />
+                    <Route path='/category/:id' element={<Category />} />
                     <Route path='/cart' exact element={<Cart />} />
                 </Routes>
                 <div className='footer'>
