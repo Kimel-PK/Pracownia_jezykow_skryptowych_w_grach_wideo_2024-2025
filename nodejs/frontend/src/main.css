@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&family=Rubik+Moonrocks&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rubik Moonrocks', cursive;
+    font-weight: bold;
+}
+
+p, input, label {
+    font-family: 'Varela Round', sans-serif;
+}
+
+main {
+    padding: 0 0 50px 0;
+}
+
+span {
+    color: red;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.p-but-a {
+	display: inline;
+	text-decoration: underline;
+}
+
+.p-but-a:hover {
+	cursor: pointer;
+	color: #d6b0a9;
+}
+
+.big-button {
+    margin: 10px 0 40px 0;
+    text-align: center;
+}
+
+.big-button p, .big-button button {
+    display: inline-block;
+    padding: 15px 25px;
+    border: 4px solid #993b2a;
+    border-radius: 25px;
+    background-color: white;
+    transition: .2s ease-in-out;
+    -webkit-box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+    -moz-box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+    box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+}
+
+.big-button p:hover, .big-button button:hover {
+    cursor: pointer;
+    transform: scale(1.1);
+}
+
+/* Shop */
+
+.product-card-inner {
+    margin: 30px 0;
+    padding: 30px 45px;
+    border: 2px solid #e7702a;
+    transition: .2s ease-in-out;
+    -webkit-box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+    -moz-box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+    box-shadow: 6px 6px 12px 0px rgba(66, 68, 90, 1);
+}
+
+.product-card-inner:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+.product-card h2 {
+    margin: 10px 0;
+}
+
+.product-card-photo {
+    width: 100%;
+    height: 250px;
+}
+
+.product-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-price h3 {
+    font-family: 'Varela Round', sans-serif;
+}
+
+/* Product page */
+
+.product-info img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Header */
+
+.header {
+    position: relative;
+    height: 150px;
+    padding: 20px 0;
+    background-color: #5c29009c;
+    color: white;
+}
+
+.header-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://img.freepik.com/premium-photo/inside-part-sliced-rye-bread-background-texture_184700-2166.jpg');
+    background-size: cover;
+    z-index: -1;
+}
+
+.header .container, .header .row, .header .col-md-4 {
+    height: 100%;
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.header .name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-cart-bar {
+    margin-bottom: 40px;
+    background-color: #72471f;
+    color: white;
+}
+
+.header-cart-bar p {
+    margin-bottom: 0;
+    display: inline-block;
+}
+
+.header-cart-bar img {
+    padding-left: 10px;
+    height: 30px;
+}
+
+.go-to-cart-button {
+    padding: 10px 0 10px 10px;
+    display: inline-block;
+}
+
+.go-to-cart-button:hover {
+    cursor: pointer;
+}
+
+/* Footer */
+
+.footer {
+    position: relative;
+    padding-top: 30px;
+    background-color: #5c29009c;
+    color: white;
+}
+
+.footer-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://img.freepik.com/premium-photo/inside-part-sliced-rye-bread-background-texture_184700-2166.jpg');
+    background-size: cover;
+    z-index: -1;
+}
+
+.footer a {
+    color: white;
+}
+
+.footer a:hover {
+    color: #d6b0a9;
+}
+
+.footer p {
+    margin: 15px 0;
+}
+
+.footer .container-fluid {
+    background-color: #5c2900bb;
+}
