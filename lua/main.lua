@@ -22,6 +22,7 @@
 -- #####################################################################################################
 
 local tetrominos = require("tetrominos")
+local bit = require("bit")
 
 local toDraw = {}
 
@@ -52,6 +53,9 @@ pressedKeys = {false, false, false, false, false, false, false, false}
 pressedKeysLastFrame = {false, false, false, false, false, false, false, false}
 
 gameState = "menu"
+linesToBreak = {}
+animFrame = 0
+debugText = "" -- DEBUG
 
 -- ---------------------
 --        Main
@@ -87,6 +91,7 @@ function love.draw()
     text = text.."Next tetromino: "..nextTetromino.."\n"
     text = text.."Tetromino rotation: "..currentTetrominoRotation.."\n"
     text = text.."Tetromino position: ("..currentTetrominoPosition[1]..","..currentTetrominoPosition[2]..")\n"
+    text = text.."Anim frame: "..animFrame.."\n"
     if board ~= nil and currentTetromino > -1 then
         local debugBoard = deepCopy(board)
         for y = 1, 4 do
@@ -96,13 +101,15 @@ function love.draw()
                 end
             end
         end
+        text = text.."1 | "
         for y = 1, #debugBoard do
             for x = 1, #debugBoard[y] do
-                text = text..debugBoard[y][x]
+                text = text..debugBoard[y][x]..", "
             end
-            text = text.."\n"
+            text = text.."\n"..(y + 1).." | "
         end
-    end 
+    end
+    text = text.."\n"..debugText
     love.graphics.print(text, 0, 0)
 end
 
@@ -156,7 +163,7 @@ function loadAssets()
     p1tetrominosSpritesheet = love.graphics.newImage("assets/gfx/tetrominos_p1_spritesheet.png")
     p2tetrominosSpritesheet = love.graphics.newImage("assets/gfx/tetrominos_p2_spritesheet.png")
     fragmentsSpritesheet = love.graphics.newImage("assets/gfx/fragments_spritesheet.png")
-    clearLineAnimSpritesheet = love.graphics.newImage("assets/gfx/line_break_anim_spritesheet.png")
+    breakLineAnimSpritesheet = love.graphics.newImage("assets/gfx/line_break_anim_spritesheet.png")
     digitsSpritesheet = love.graphics.newImage("assets/gfx/digits_spritesheet.png")
     
     pauseSprite = love.graphics.newImage("assets/gfx/pause.png")
@@ -276,10 +283,51 @@ function game_update()
         music[math.random(1, 4)]:play()
     end
     
-    -- spawn new tetromino
-    if currentTetromino == -1 then
-        getTetromino()
+    -- animate line break
+    if #linesToBreak > 0 then
+        
+        if animFrame == 0 then
+            if #linesToBreak == 1 then
+                cheemsSFX:play()
+            elseif #linesToBreak == 2 then
+                dogeSFX:play()
+            elseif #linesToBreak == 3 then
+                buffdogeSFX:play()
+            elseif #linesToBreak == 4 then
+                temtrisSFX:play()
+            end
+        elseif animFrame > 31 then
+            animFrame = 0
+            breakLines()
+            game_draw()
+            return
+        end
+        
+        animFrame = animFrame + 1
+        game_draw()
+        
+        for i, y in ipairs(linesToBreak) do
+            table.insert(toDraw, Sprite:new(breakLineAnimSpritesheet, 10, 4 + y, (#linesToBreak - 1) * 10, animFrame, 10, 1))
+        end
+        
+        -- DEBUG
+        debugText = ""
+        for i, y in pairs(linesToBreak) do
+            local realY = y - i + 1
+            
+            if realY - 1 >= 1 then
+                debugText = debugText.."remove bottoms from "..(realY - 1)..", \n"
+            end
+            debugText = debugText.."remove row "..(realY)..", \n"
+            if realY + 1 <= 20 then
+                debugText = debugText.."remove tops from "..(realY + 1)..", \n"
+            end
+        end
+        return
     end
+    
+    -- spawn new tetromino
+    spawnTetromino()
     
     fallTimer = fallTimer - 1
     if fallTimer == 0 then
@@ -329,11 +377,12 @@ function game_update()
     end
     
     if inputRotateTimer == 0 and currentTetromino > -1 then
+        -- B
         if pressedKeys[0] then
             rotateTetrominoLeft()
             inputRotateTimer = 10
-        end
-        if pressedKeys[1] then
+        -- A
+        elseif pressedKeys[1] then
             rotateTetrominoRight()
             inputRotateTimer = 10
         end
@@ -349,6 +398,17 @@ function game_update()
         music[4]:stop()
     end
 
+    game_draw()
+end
+
+function game_end()
+    music[1]:stop()
+    music[2]:stop()
+    music[3]:stop()
+    music[4]:stop()
+end
+
+function game_draw()
     -- draw bg
     table.insert(toDraw, Sprite:new(gameBg, 0, 0))
     
@@ -362,38 +422,44 @@ function game_update()
     drawBoard()
 end
 
-function game_end()
-    
-end
-
 function drawP1LinesCounter()
     local thousands = math.floor(linesCount[1] / 1000) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 4, 9, thousands, 0, thousands + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 4, 9, thousands, 0, 1, 1))
     local hundreds = math.floor(linesCount[1] / 100) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 5, 9, hundreds, 0, hundreds + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 5, 9, hundreds, 0, 1, 1))
     local tens = math.floor(linesCount[1] / 10) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 6, 9, tens, 0, tens + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 6, 9, tens, 0, 1, 1))
     local digits = linesCount[1] % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 7, 9, digits, 0, digits + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 7, 9, digits, 0, 1, 1))
 end
 
 function drawP1PointsCounter()
     local thousands = math.floor(points[1] / 1000) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 4, 12, thousands, 0, thousands + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 4, 12, thousands, 0, 1, 1))
     local hundreds = math.floor(points[1] / 100) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 5, 12, hundreds, 0, hundreds + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 5, 12, hundreds, 0, 1, 1))
     local tens = math.floor(points[1] / 10) % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 6, 12, tens, 0, tens + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 6, 12, tens, 0, 1, 1))
     local digits = points[1] % 10
-    table.insert(toDraw, Sprite:new(digitsSpritesheet, 7, 12, digits, 0, digits + 1, 1))
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 7, 12, digits, 0, 1, 1))
 end
 
-function getTetromino()
+function spawnTetromino()
+    if currentTetromino > -1 then
+        return
+    end
     currentTetromino = nextTetromino
     currentTetrominoPosition = {3, 0}
     currentTetrominoRotation = 0
     
     nextTetromino = math.random(0, 6)
+    
+    if checkCollision(0, 0, 0) then
+        -- TODO game over
+        game_end()
+        gameState = "menu"
+        menu_start()
+    end
 end
 
 function drawNextTetromino()
@@ -420,7 +486,7 @@ function drawBoard()
 end
 
 function tetrominoFall()
-    if checkCollision(0, 1) then
+    if checkCollision(0, 1, 0) then
         placeTetromino()
         hitSFX:play()
     else
@@ -428,10 +494,10 @@ function tetrominoFall()
     end
 end
 
-function checkCollision(offsetX, offsetY)
+function checkCollision(offsetX, offsetY, offsetR)
     for y = 1, 4 do
         for x = 1, 4 do
-            local tetrominoFrag = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+            local tetrominoFrag = tetrominos[currentTetromino + 1][((currentTetrominoRotation + offsetR) % 4) + 1][y][x]
             if tetrominoFrag > -1 then
                 -- oob
                 if currentTetrominoPosition[1] + x + offsetX < 1 or currentTetrominoPosition[1] + x + offsetX > 10 then
@@ -451,23 +517,33 @@ function checkCollision(offsetX, offsetY)
 end
 
 function moveTetrominoLeft()
-    if not checkCollision(-1, 0) then
+    if not checkCollision(-1, 0, 0) then
         currentTetrominoPosition[1] = currentTetrominoPosition[1] - 1
     end
 end
 
 function moveTetrominoRight()
-    if not checkCollision(1, 0) then
+    if not checkCollision(1, 0, 0) then
         currentTetrominoPosition[1] = currentTetrominoPosition[1] + 1
     end
 end
 
 function rotateTetrominoRight()
-    currentTetrominoRotation = (currentTetrominoRotation + 1) % 4
+    if not checkCollision(0, 0, 1) then
+        currentTetrominoRotation = (currentTetrominoRotation + 1) % 4
+    elseif not checkCollision(-1, 0, 1) then
+        currentTetrominoPosition[1] = currentTetrominoPosition[1] - 1
+        currentTetrominoRotation = (currentTetrominoRotation + 1) % 4
+    end
 end
 
 function rotateTetrominoLeft()
-    currentTetrominoRotation = (currentTetrominoRotation - 1) % 4
+    if not checkCollision(0, 0, -1) then
+        currentTetrominoRotation = (currentTetrominoRotation - 1) % 4
+    elseif not checkCollision(1, 0, -1) then
+        currentTetrominoPosition[1] = currentTetrominoPosition[1] + 1
+        currentTetrominoRotation = (currentTetrominoRotation - 1) % 4
+    end
 end
 
 function placeTetromino()
@@ -480,15 +556,67 @@ function placeTetromino()
     end
     
     currentTetromino = -1
+    
+    -- check if any line to break
+    for y = 1, 20 do
+        local fragmentsCount = 0
+        for x = 1, 10 do
+            if board[y][x] > -1 then
+                fragmentsCount = fragmentsCount + 1
+            end
+        end
+        if fragmentsCount == 10 then
+            table.insert(linesToBreak, y)
+        end
+    end
+end
+
+function breakLines()
+    -- remove and update fragments
+    for i, y in pairs(linesToBreak) do
+        local realY = y - i + 1
+        
+        if realY - 1 >= 1 then
+            for x = 1, 10 do
+                if board[realY - 1][x] > -1 then
+                    board[realY - 1][x] = bit.band(board[realY - 1][x], bit.bnot(2))
+                end
+            end
+        end
+        if realY + 1 <= 20 then
+            for x = 1, 10 do
+                if board[realY + 1][x] > -1 then
+                    board[realY + 1][x] = bit.band(board[realY - 1][x], bit.bnot(4))
+                end
+            end
+        end
+        table.remove(board, realY)
+        table.insert(board, 1, {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,})
+    end
+    
+    -- count lines
+    linesCount[1] = linesCount[1] + #linesToBreak
+    if #linesToBreak == 1 then
+        cheemsLinesCount[1] = cheemsLinesCount[1] + 1
+    elseif #linesToBreak == 2 then
+        dogeLinesCount[1] = dogeLinesCount[1] + 1
+    elseif #linesToBreak == 3 then
+        buffDogeLinesCount[1] = buffDogeLinesCount[1] + 1
+    elseif #linesToBreak == 4 then
+        temtrisLinesCount[1] = temtrisLinesCount[1] + 1
+    end
+    level = math.floor(linesCount[1] / 30)
+    
+    linesToBreak = {}
 end
 
 function deepCopy(original)
     local copy = {}
     for key, value in pairs(original) do
         if type(value) == "table" then
-            copy[key] = deepCopy(value)  -- Recursively copy nested tables
+            copy[key] = deepCopy(value)
         else
-            copy[key] = value  -- Copy the value directly
+            copy[key] = value
         end
     end
     return copy
