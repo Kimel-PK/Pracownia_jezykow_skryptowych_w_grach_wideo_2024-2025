@@ -1,3 +1,28 @@
+-- #####################################################################################################
+-- 
+-- ┌──────────────────┐                                    ┌──┐
+-- └───────┐  ┌───────┘                                    │  │
+--         │  │                                       ─────┘  └──┐                 ┌──┐
+--         │  │                                     /──────┐  ┌──┘                 └──┘
+--         │  │    ┌──────────┐                            │  │
+--         │  │    │  ┌───────┘    ┌────────────────       │  │    |\    ─────┐    ┌──┐      ────────
+--         │  │    │  │            │  ┌────┐  ┌────┐ \     │  │    │ \ /   ───┘    │  │    /   ───────\
+--         │  │    │  └───┐        │  │    │  │    │  │    │  │    │     /         │  │     \  \
+--         │  │    │  ┌───┘        │  │    │  │    │  │    │  │    │   /           │  │        \  \
+--         │  │    │  │            │  │    │  │    │  │    │  │    │  │            │  │           \  \
+--         │  │    │  └───────┐    │  │    │  │    │  │    │  │    │  │            │  │     ─────     /
+--         │  │    └──────────┘    └──┘    └──┘    └──┘    └──┘    └──┘            └──┘     \────────/
+--         │ /
+--         │/
+-- 
+-- #####################################################################################################
+--                                                        Port Temtris.py (Python) => Temtris (LÖVE Lua)
+--                                          https://github.com/Kimel-PK/Temtris.py
+--                                                                                              Kimel_PK
+-- #####################################################################################################
+
+local tetrominos = require("tetrominos")
+
 local toDraw = {}
 
 Sprite = {}
@@ -27,6 +52,7 @@ pressedKeys = {false, false, false, false, false, false, false, false}
 pressedKeysLastFrame = {false, false, false, false, false, false, false, false}
 
 gameState = "menu"
+
 -- ---------------------
 --        Main
 -- ---------------------
@@ -39,6 +65,8 @@ function love.load()
 end
 
 function love.update(dt)
+    processInput()
+    
     if gameState == "menu" then
         menu_update()
     elseif gameState == "game" then
@@ -46,9 +74,6 @@ function love.update(dt)
     elseif gameState == "game_multi" then
         game_multi_update()
     end
-    
-    pressedKeysLastFrame = pressedKeys
-    pressedKeys = {false, false, false, false, false, false, false, false}
 end
 
 function love.draw()
@@ -56,6 +81,29 @@ function love.draw()
         sprite:draw()
     end
     toDraw = {}
+    
+    local text = ""
+    text = text.."Curent tetromino: "..currentTetromino.."\n"
+    text = text.."Next tetromino: "..nextTetromino.."\n"
+    text = text.."Tetromino rotation: "..currentTetrominoRotation.."\n"
+    text = text.."Tetromino position: ("..currentTetrominoPosition[1]..","..currentTetrominoPosition[2]..")\n"
+    if board ~= nil and currentTetromino > -1 then
+        local debugBoard = deepCopy(board)
+        for y = 1, 4 do
+            for x = 1, 4 do
+                if x + currentTetrominoPosition[1] >= 1 and x + currentTetrominoPosition[1] <= 10 and y + currentTetrominoPosition[2] >= 1 and y + currentTetrominoPosition[2] <= 20 then
+                    debugBoard[y + currentTetrominoPosition[2]][x + currentTetrominoPosition[1]] = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+                end
+            end
+        end
+        for y = 1, #debugBoard do
+            for x = 1, #debugBoard[y] do
+                text = text..debugBoard[y][x]
+            end
+            text = text.."\n"
+        end
+    end 
+    love.graphics.print(text, 0, 0)
 end
 
 function resetVariables()
@@ -120,22 +168,32 @@ end
 --        Input
 -- ---------------------
 
-function love.keypressed(key)
-    if key == "k" then
+function processInput()
+    pressedKeysLastFrame = pressedKeys
+    pressedKeys = {false, false, false, false, false, false, false, false}
+    
+    if love.keyboard.isDown("k") then
         pressedKeys[0] = true
-    elseif key == "l" then
+    end
+    if love.keyboard.isDown("l") then
         pressedKeys[1] = true
-    elseif key == "up" then
+    end
+    if love.keyboard.isDown("up") then
         pressedKeys[2] = true
-    elseif key == "down" then
+    end
+    if love.keyboard.isDown("down") then
         pressedKeys[3] = true
-    elseif key == "left" then
+    end
+    if love.keyboard.isDown("left") then
         pressedKeys[4] = true
-    elseif key == "right" then
+    end
+    if love.keyboard.isDown("right") then
         pressedKeys[5] = true
-    elseif key == "return" then
+    end
+    if love.keyboard.isDown("return") then
         pressedKeys[6] = true
-    elseif key == "rshift" then
+    end
+    if love.keyboard.isDown("rshift") then
         pressedKeys[7] = true
     end
 end
@@ -208,7 +266,8 @@ currentTetrominoPosition = {3, 0}
 currentTetrominoRotation = 0
 
 function game_start()
-    nextTetromino = math.random(0, 7)
+    nextTetromino = math.random(0, 6)
+    fallTimer = fallSpeed
 end
 
 function game_update()
@@ -222,14 +281,74 @@ function game_update()
         getTetromino()
     end
     
-    -- input logic
-    if pressedKeys[0] and not pressedKeysLastFrame[0] then
-        currentTetrominoRotation = (currentTetrominoRotation + 1) % 4
+    fallTimer = fallTimer - 1
+    if fallTimer == 0 then
+        fallTimer = fallSpeed
+        tetrominoFall()
     end
-    if pressedKeys[1] and not pressedKeysLastFrame[1] then
-        currentTetrominoRotation = (currentTetrominoRotation - 1) % 4
+
+    -- input logic
+    
+    if inputTimer > 0 then
+        inputTimer = inputTimer - 1
     end
     
+    if inputTimer == 0 and currentTetromino > -1 then
+		
+        -- RIGHT
+        if pressedKeys[5] then
+            moveTetrominoRight()
+            if pressedKeysLastFrame[5] then
+                inputTimer = 3
+            else
+                inputTimer = 10
+            end
+        -- LEFT
+        elseif pressedKeys[4] then
+            moveTetrominoLeft()
+            if pressedKeysLastFrame[4] then
+                inputTimer = 3
+            else
+                inputTimer = 10
+            end
+        -- DOWN
+        elseif pressedKeys[3] then
+            fallTimer = fallSpeed
+            if pressedKeysLastFrame[3] then
+                inputTimer = 3
+            else
+                inputTimer = 10
+            end
+            tetrominoFall()
+        end
+    end
+        
+    -- rotation
+    if inputRotateTimer > 0 then
+        inputRotateTimer = inputRotateTimer - 1
+    end
+    
+    if inputRotateTimer == 0 and currentTetromino > -1 then
+        if pressedKeys[0] then
+            rotateTetrominoLeft()
+            inputRotateTimer = 10
+        end
+        if pressedKeys[1] then
+            rotateTetrominoRight()
+            inputRotateTimer = 10
+        end
+    end
+    
+    if pressedKeys[6] and not pressedKeysLastFrame[6] then
+        -- TODO toggle pause
+    end
+    if pressedKeys[7] and not pressedKeysLastFrame[7] then
+        music[1]:stop()
+        music[2]:stop()
+        music[3]:stop()
+        music[4]:stop()
+    end
+
     -- draw bg
     table.insert(toDraw, Sprite:new(gameBg, 0, 0))
     
@@ -274,15 +393,19 @@ function getTetromino()
     currentTetrominoPosition = {3, 0}
     currentTetrominoRotation = 0
     
-    nextTetromino = math.random(0, 7)
+    nextTetromino = math.random(0, 6)
 end
 
 function drawNextTetromino()
-    table.insert(toDraw, Sprite:new(tetrominosSpritesheet, 3, 4, 0, nextTetromino * 4, 4, 4))
+    if nextTetromino > -1 then
+        table.insert(toDraw, Sprite:new(tetrominosSpritesheet, 4, 4, 0, nextTetromino * 4, 4, 4))
+    end
 end
 
 function drawFallingTetromino()
-    table.insert(toDraw, Sprite:new(tetrominosSpritesheet, currentTetrominoPosition[1] + 10, currentTetrominoPosition[2] + 5, currentTetrominoRotation * 4, currentTetromino * 4, 4, 4))
+    if currentTetromino > -1 then
+        table.insert(toDraw, Sprite:new(tetrominosSpritesheet, currentTetrominoPosition[1] + 10, currentTetrominoPosition[2] + 5, currentTetrominoRotation * 4, currentTetromino * 4, 4, 4))
+    end
 end
 
 function drawBoard()
@@ -294,4 +417,79 @@ function drawBoard()
             end
         end
     end
+end
+
+function tetrominoFall()
+    if checkCollision(0, 1) then
+        placeTetromino()
+        hitSFX:play()
+    else
+        currentTetrominoPosition[2] = currentTetrominoPosition[2] + 1
+    end
+end
+
+function checkCollision(offsetX, offsetY)
+    for y = 1, 4 do
+        for x = 1, 4 do
+            local tetrominoFrag = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+            if tetrominoFrag > -1 then
+                -- oob
+                if currentTetrominoPosition[1] + x + offsetX < 1 or currentTetrominoPosition[1] + x + offsetX > 10 then
+                    return true
+                end
+                if currentTetrominoPosition[2] + y + offsetY < 1 or currentTetrominoPosition[2] + y + offsetY > 20 then
+                    return true
+                end
+                -- collision with other fragment
+                if board[currentTetrominoPosition[2] + y + offsetY][currentTetrominoPosition[1] + x + offsetX] > -1 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+function moveTetrominoLeft()
+    if not checkCollision(-1, 0) then
+        currentTetrominoPosition[1] = currentTetrominoPosition[1] - 1
+    end
+end
+
+function moveTetrominoRight()
+    if not checkCollision(1, 0) then
+        currentTetrominoPosition[1] = currentTetrominoPosition[1] + 1
+    end
+end
+
+function rotateTetrominoRight()
+    currentTetrominoRotation = (currentTetrominoRotation + 1) % 4
+end
+
+function rotateTetrominoLeft()
+    currentTetrominoRotation = (currentTetrominoRotation - 1) % 4
+end
+
+function placeTetromino()
+    for y = 1, 4 do
+        for x = 1, 4 do
+            if tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x] > -1 then
+                board[y + currentTetrominoPosition[2]][x + currentTetrominoPosition[1]] = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+            end
+        end
+    end
+    
+    currentTetromino = -1
+end
+
+function deepCopy(original)
+    local copy = {}
+    for key, value in pairs(original) do
+        if type(value) == "table" then
+            copy[key] = deepCopy(value)  -- Recursively copy nested tables
+        else
+            copy[key] = value  -- Copy the value directly
+        end
+    end
+    return copy
 end
