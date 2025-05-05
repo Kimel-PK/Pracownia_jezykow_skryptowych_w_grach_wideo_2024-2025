@@ -54,7 +54,7 @@ end
 pressedKeys = {false, false, false, false, false, false, false, false}
 pressedKeysLastFrame = {false, false, false, false, false, false, false, false}
 
-gameState = "menu"
+gameState = "intro"
 linesToBreak = {}
 animFrame = 0
 debugText = "" -- DEBUG
@@ -69,18 +69,21 @@ function love.load()
     math.randomseed(os.time())
     resetVariables()
     loadAssets()
-    menu_start()
 end
 
 function love.update(dt)
     processInput()
     
-    if gameState == "menu" then
-        menu_update()
+    if gameState == "intro" then
+        introUpdate()
+    elseif gameState == "menu" then
+        menuUpdate()
     elseif gameState == "game" then
-        game_update()
+        gameUpdate(dt)
     elseif gameState == "game_multi" then
-        game_multi_update()
+        gameMultiUpdate()
+    elseif gameState == "game_over" then
+        gameOverUpdate()
     end
 end
 
@@ -97,10 +100,25 @@ end
 
 function love.keypressed(key)
     if key == "1" then
+        if gameState ~= "game" then
+            saveStateInfoText = "State can only be saved ingame!"
+            saveStateInfoTimer = 120
+            return
+        end
         saveState.save()
         saveStateInfoText = "Game state saved!"
         saveStateInfoTimer = 120
     elseif key == "2" then
+        if gameState ~= "game" then
+            saveStateInfoText = "State can only be loaded ingame!"
+            saveStateInfoTimer = 120
+            return
+        end
+        if not saveState.isSthSaved then
+            saveStateInfoText = "No state data saved!"
+            saveStateInfoTimer = 120
+            return
+        end
         saveState.load()
         saveStateInfoText = "Game state loaded!"
         saveStateInfoTimer = 120
@@ -111,20 +129,15 @@ function drawTextOverlay()
     
     local text = ""
     text = text.."Player 1:\n"
-    text = text.."ENTER - start game\n"
+    text = text.."Enter - start game / pause\n"
+    text = text.."Right shift - play random music\n"
     text = text.."Arrow keys - move\n"
     text = text.."K - rotate left\n"
     text = text.."L - rotate right\n"
     text = text.."\n"
     text = text.."1 - save game state\n"
     text = text.."2 - load game state\n"
-    love.graphics.print(text, 0, 0)
-    
-    if saveState.gameData ~= nil then
-        for i, value in pairs(saveState.gameData) do
-            love.graphics.print(value, 150, i * 15)
-        end
-    end
+    love.graphics.print(text, 10, 10)
     
     if saveStateInfoTimer > -1 then
         local defaultFont = love.graphics.getFont()
@@ -143,8 +156,9 @@ function debugDraw()
     text = text.."Next tetromino: "..nextTetromino.."\n"
     text = text.."Tetromino rotation: "..currentTetrominoRotation.."\n"
     text = text.."Tetromino position: ("..currentTetrominoPosition[1]..","..currentTetrominoPosition[2]..")\n"
-    text = text.."Anim frame: "..animFrame.."\n"
-    love.graphics.print(text, 800, 0)
+    text = text.."Game time: "..gameTime.."\n"
+    
+    love.graphics.print(text, 800, 10)
     
     if board ~= nil and currentTetromino > -1 then
         local debugBoard = utility.deepCopy(board)
@@ -170,7 +184,8 @@ function debugDraw()
 end
 
 function resetVariables()
-    pause = False
+    board = {{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1},}
+    pause = false
     level = 0
     linesCount = {0, 0}
     cheemsLinesCount = {0, 0}
@@ -179,12 +194,13 @@ function resetVariables()
     temtrisLinesCount = {0, 0}
     points = {0, 0}
     gameTime = 0
-    twoPlayerMode = False
+    twoPlayerMode = false
     currentPlayer = 0
     inputTimer = 10
     inputRotateTimer = 10
     fallSpeed = 60
     fallTimer = 60
+    gameOverAnimFrame = 0
 end
 
 function loadAssets()
@@ -204,6 +220,7 @@ function loadAssets()
         love.audio.newSource("assets/sfx/song_for_denise_nes_apu_cover.ogg", "stream"),
         love.audio.newSource("assets/sfx/szanty_bitwa_nes_apu_cover.ogg", "stream")
     }
+    gameOverTheme = love.audio.newSource("assets/sfx/game_over.ogg", "static")
     
     -- gfx
     menuBg = love.graphics.newImage("assets/gfx/menu_bg.png")
@@ -265,26 +282,57 @@ end
 --        Intro
 -- ---------------------
 
--- TODO
+introAnimFrame = 0
+
+function introUpdate()
+    
+    if pressedKeys[6] and not pressedKeysLastFrame[6] then
+        introSFX:stop()
+        gameState = "menu"
+        menuStart()
+    end
+    
+    if introAnimFrame < 30 then
+    elseif introAnimFrame == 30 then
+        introSFX:play()
+        table.insert(toDraw, Sprite:new(introSprite, 6, 9, 0, 0, 19, 10))
+    elseif introAnimFrame < 60 then
+        table.insert(toDraw, Sprite:new(introSprite, 6, 9, 0, 0, 19, 10))
+    elseif introAnimFrame < 90 then
+        table.insert(toDraw, Sprite:new(introSprite, 6, 9, 0, 10, 19, 10))
+    elseif introAnimFrame < 120 then
+        table.insert(toDraw, Sprite:new(introSprite, 6, 9, 0, 20, 19, 10))
+    elseif introAnimFrame < 300 then
+        table.insert(toDraw, Sprite:new(introSprite, 6, 9, 0, 30, 19, 10))
+    elseif introAnimFrame > 300 then
+        gameState = "menu"
+        menuStart()
+    end
+    
+    introAnimFrame = introAnimFrame + 1
+end
 
 -- ---------------------
 --         Menu
 -- ---------------------
 
-function menu_start()
+function menuStart()
     temtrisTheme:setLooping(true)
     temtrisTheme:play()
 end
 
-function menu_update()
+function menuUpdate()
+    --[[
     if pressedKeys[2] and not pressedKeysLastFrame[2] then
         twoPlayerMode = not twoPlayerMode
     elseif pressedKeys[3] and not pressedKeysLastFrame[3] then
         twoPlayerMode = not twoPlayerMode
-    elseif love.keyboard.isDown("return") then
-        menu_end()
+    end
+    --]]
+    if pressedKeys[6] and not pressedKeysLastFrame[6] then
+        menuEnd()
         gameState = "game"
-        game_start()
+        gameStart()
     end
     
     table.insert(toDraw, Sprite:new(menuBg, 0, 0))
@@ -295,7 +343,7 @@ function menu_update()
     end
 end
 
-function menu_end()
+function menuEnd()
     temtrisTheme:stop()
 end
 
@@ -330,21 +378,32 @@ nextTetromino = -1
 currentTetrominoPosition = {3, 0}
 currentTetrominoRotation = 0
 
-function game_start()
+function gameStart()
+    resetVariables()
     nextTetromino = math.random(0, 6)
     fallTimer = fallSpeed
+    pause = false
 end
 
-function game_update()
+function gameUpdate(dt)
     -- play music if is not playing
     if not music[1]:isPlaying() and not music[2]:isPlaying() and not music[3]:isPlaying() and not music[4]:isPlaying() then
         music[math.random(1, 4)]:play()
     end
     
+    if pressedKeys[6] and not pressedKeysLastFrame[6] then
+        pause = not pause
+    end
+    
+    if pause then
+        game_draw()
+        return
+    end
+    
     -- animate line break
     if #linesToBreak > 0 then
         
-        if animFrame == 0 then
+        if animFrame == 29 then
             if #linesToBreak == 1 then
                 cheemsSFX:play()
             elseif #linesToBreak == 2 then
@@ -354,7 +413,7 @@ function game_update()
             elseif #linesToBreak == 4 then
                 temtrisSFX:play()
             end
-        elseif animFrame > 31 then
+        elseif animFrame > 30 then
             animFrame = 0
             breakLines()
             game_draw()
@@ -433,20 +492,20 @@ function game_update()
         end
     end
     
-    if pressedKeys[6] and not pressedKeysLastFrame[6] then
-        -- TODO toggle pause
-    end
     if pressedKeys[7] and not pressedKeysLastFrame[7] then
         music[1]:stop()
         music[2]:stop()
         music[3]:stop()
         music[4]:stop()
     end
+    
+    gameTime = gameTime + dt
 
     game_draw()
 end
 
 function game_end()
+    pause = true
     music[1]:stop()
     music[2]:stop()
     music[3]:stop()
@@ -463,8 +522,13 @@ function game_draw()
     
     -- draw board
     drawNextTetromino()
-    drawFallingTetromino()
     drawBoard()
+    drawFallingTetromino()
+    
+    -- draw pause text
+    if pause and gameState == "game" then
+        table.insert(toDraw, Sprite:new(pauseSprite, 12, 2))
+    end
 end
 
 function drawP1LinesCounter()
@@ -500,10 +564,8 @@ function spawnTetromino()
     nextTetromino = math.random(0, 6)
     
     if checkCollision(0, 0, 0) then
-        -- TODO game over
         game_end()
-        gameState = "menu"
-        menu_start()
+        gameState = "game_over"
     end
 end
 
@@ -665,4 +727,113 @@ function breakLines()
     end
     
     linesToBreak = {}
+end
+
+-- ---------------------
+--      Game over
+-- ---------------------
+
+gameOverAnimFrame = 0
+
+function gameOverUpdate()
+    
+    gameOverAnimFrame = gameOverAnimFrame + 1
+    
+    if pressedKeys[6] and not pressedKeysLastFrame[6] then
+        gameOverTheme:stop()
+        gameState = "menu"
+        menuStart()
+    end
+    
+    if gameOverAnimFrame < 60 then
+        game_draw()
+        return
+    elseif gameOverAnimFrame == 60 then
+        gameOverTheme:play()
+        table.insert(toDraw, Sprite:new(gameOverBg, 0, 0))
+        return
+    elseif gameOverAnimFrame < 150 then
+        table.insert(toDraw, Sprite:new(gameOverBg, 0, 0))
+        return
+    end
+    
+    table.insert(toDraw, Sprite:new(gameOver2Bg, 0, 0))
+    
+    -- draw p1 points
+    local thousands = math.floor(points[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 13, thousands, 0, 1, 1))
+    local hundreds = math.floor(points[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 13, hundreds, 0, 1, 1))
+    local tens = math.floor(points[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 13, tens, 0, 1, 1))
+    local digits = points[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 13, digits, 0, 1, 1))
+    
+    -- draw p1 lines
+    local thousands = math.floor(linesCount[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 15, thousands, 0, 1, 1))
+    local hundreds = math.floor(linesCount[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 15, hundreds, 0, 1, 1))
+    local tens = math.floor(linesCount[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 15, tens, 0, 1, 1))
+    local digits = linesCount[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 15, digits, 0, 1, 1))
+    
+    -- draw p1 cheems lines
+    local thousands = math.floor(cheemsLinesCount[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 17, thousands, 0, 1, 1))
+    local hundreds = math.floor(cheemsLinesCount[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 17, hundreds, 0, 1, 1))
+    local tens = math.floor(cheemsLinesCount[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 17, tens, 0, 1, 1))
+    local digits = cheemsLinesCount[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 17, digits, 0, 1, 1))
+    
+    -- draw p1 doge lines
+    local thousands = math.floor(dogeLinesCount[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 19, thousands, 0, 1, 1))
+    local hundreds = math.floor(dogeLinesCount[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 19, hundreds, 0, 1, 1))
+    local tens = math.floor(dogeLinesCount[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 19, tens, 0, 1, 1))
+    local digits = dogeLinesCount[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 19, digits, 0, 1, 1))
+    
+    -- draw p1 buffdoge lines
+    local thousands = math.floor(buffDogeLinesCount[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 21, thousands, 0, 1, 1))
+    local hundreds = math.floor(buffDogeLinesCount[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 21, hundreds, 0, 1, 1))
+    local tens = math.floor(buffDogeLinesCount[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 21, tens, 0, 1, 1))
+    local digits = buffDogeLinesCount[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 21, digits, 0, 1, 1))
+    
+    -- draw p1 temtris lines
+    local thousands = math.floor(temtrisLinesCount[1] / 1000) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 23, thousands, 0, 1, 1))
+    local hundreds = math.floor(temtrisLinesCount[1] / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 23, hundreds, 0, 1, 1))
+    local tens = math.floor(temtrisLinesCount[1] / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 23, tens, 0, 1, 1))
+    local digits = temtrisLinesCount[1] % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 14, 23, digits, 0, 1, 1))
+    
+    -- draw game time
+    gameTime = math.floor(gameTime)
+    local minutes = gameTime / 60
+    local seconds = gameTime % 60
+    
+    -- minutes
+    local minutesHundreds = math.floor(minutes / 100) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 11, 25, minutesHundreds, 0, 1, 1))
+    local minutesTens = math.floor(minutes / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 12, 25, minutesTens, 0, 1, 1))
+    local minutesDigits = math.floor(minutes) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 13, 25, minutesDigits, 0, 1, 1))
+    -- seconds
+    local secondsTens = math.floor(seconds / 10) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 15, 25, secondsTens, 0, 1, 1))
+    local secondsDigits = math.floor(seconds) % 10
+    table.insert(toDraw, Sprite:new(digitsSpritesheet, 16, 25, secondsDigits, 0, 1, 1))
 end

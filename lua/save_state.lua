@@ -2,10 +2,11 @@ local utility = require("utility")
 
 saveState = {}
 saveState.gameData = {}
+saveState.isSthSaved = false
 
 function saveState.save()
-	saveState.gameData[1] = gameState
-	saveState.gameData[2] = pause
+    saveState.gameData[1] = gameState
+    saveState.gameData[2] = pause
     saveState.gameData[3] = level
     saveState.gameData[4] = utility.deepCopy(linesCount)
     saveState.gameData[5] = utility.deepCopy(cheemsLinesCount)
@@ -20,16 +21,18 @@ function saveState.save()
     saveState.gameData[14] = inputRotateTimer
     saveState.gameData[15] = fallSpeed
     saveState.gameData[16] = fallTimer
-	saveState.gameData[17] = utility.deepCopy(board)
-	saveState.gameData[18] = currentTetromino
-	saveState.gameData[19] = nextTetromino
-	saveState.gameData[20] = utility.deepCopy(currentTetrominoPosition)
-	saveState.gameData[21] = currentTetrominoRotation
+    saveState.gameData[17] = utility.deepCopy(board)
+    saveState.gameData[18] = currentTetromino
+    saveState.gameData[19] = nextTetromino
+    saveState.gameData[20] = utility.deepCopy(currentTetrominoPosition)
+    saveState.gameData[21] = currentTetrominoRotation
+    
+    saveState.isSthSaved = true
 end
 
 function saveState.load()
-	gameState = saveState.gameData[1]
-	pause = saveState.gameData[2]
+    gameState = saveState.gameData[1]
+    pause = saveState.gameData[2]
     level = saveState.gameData[3]
     linesCount = saveState.gameData[4]
     cheemsLinesCount = saveState.gameData[5]
@@ -44,11 +47,11 @@ function saveState.load()
     inputRotateTimer = saveState.gameData[14]
     fallSpeed = saveState.gameData[15]
     fallTimer = saveState.gameData[16]
-	board = utility.deepCopy(saveState.gameData[17])
-	currentTetromino = saveState.gameData[18]
-	nextTetromino = saveState.gameData[19]
-	currentTetrominoPosition = utility.deepCopy(saveState.gameData[20])
-	currentTetrominoRotation = saveState.gameData[21]
+    board = utility.deepCopy(saveState.gameData[17])
+    currentTetromino = saveState.gameData[18]
+    nextTetromino = saveState.gameData[19]
+    currentTetrominoPosition = utility.deepCopy(saveState.gameData[20])
+    currentTetrominoRotation = saveState.gameData[21]
 end
 
 return saveState

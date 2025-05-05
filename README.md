@@ -31,10 +31,10 @@ Należy stworzyć prosty sklep z serwerem REST API
 
 Należy stworzyć grę Tetris w Lua na frameworku [Löve](https://love2d.org/).
 
-- [ ] 3.0 Postawowa wersja dekstopowa z obsługą na klawiaturze - minimum 4 rodzaje klocków
-- [ ] 3.5 Zapis i odczyt gier
-- [ ] 4.0 Dodanie efektów dźwiękowych przy akcjach
-- [ ] 4.5 Dodanie animacji przy zbijaniu klocków
+- [X] 3.0 Postawowa wersja dekstopowa z obsługą na klawiaturze - minimum 4 rodzaje klocków
+- [X] 3.5 Zapis i odczyt gier
+- [X] 4.0 Dodanie efektów dźwiękowych przy akcjach
+- [X] 4.5 Dodanie animacji przy zbijaniu klocków
 - [ ] 5.0 Wersja na iOS lub Android z implementacją touch zamiast klawiatury
 
 ## Ruby2D
