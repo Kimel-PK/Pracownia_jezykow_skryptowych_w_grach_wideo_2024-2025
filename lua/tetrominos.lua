@@ -1,4 +1,4 @@
-tetrominos = {
+local tetrominos = {
     -- O
     {
         {

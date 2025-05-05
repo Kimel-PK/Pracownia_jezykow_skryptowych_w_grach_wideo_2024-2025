@@ -21,7 +21,9 @@
 --                                                                                              Kimel_PK
 -- #####################################################################################################
 
+local utility = require("utility")
 local tetrominos = require("tetrominos")
+local saveState = require("save_state")
 local bit = require("bit")
 
 local toDraw = {}
@@ -56,6 +58,8 @@ gameState = "menu"
 linesToBreak = {}
 animFrame = 0
 debugText = "" -- DEBUG
+saveStateInfoText = ""
+saveStateInfoTimer = -1
 
 -- ---------------------
 --        Main
@@ -86,31 +90,83 @@ function love.draw()
     end
     toDraw = {}
     
+    drawTextOverlay()
+    -- DEBUG
+    -- debugDraw()
+end
+
+function love.keypressed(key)
+    if key == "1" then
+        saveState.save()
+        saveStateInfoText = "Game state saved!"
+        saveStateInfoTimer = 120
+    elseif key == "2" then
+        saveState.load()
+        saveStateInfoText = "Game state loaded!"
+        saveStateInfoTimer = 120
+    end
+end
+
+function drawTextOverlay()
+    
+    local text = ""
+    text = text.."Player 1:\n"
+    text = text.."ENTER - start game\n"
+    text = text.."Arrow keys - move\n"
+    text = text.."K - rotate left\n"
+    text = text.."L - rotate right\n"
+    text = text.."\n"
+    text = text.."1 - save game state\n"
+    text = text.."2 - load game state\n"
+    love.graphics.print(text, 0, 0)
+    
+    if saveState.gameData ~= nil then
+        for i, value in pairs(saveState.gameData) do
+            love.graphics.print(value, 150, i * 15)
+        end
+    end
+    
+    if saveStateInfoTimer > -1 then
+        local defaultFont = love.graphics.getFont()
+        local bigFont = love.graphics.newFont(32)
+        love.graphics.setFont(bigFont)
+        love.graphics.print(saveStateInfoText, 20, 840)
+        saveStateInfoTimer = saveStateInfoTimer - 1
+        love.graphics.setFont(defaultFont)
+    end
+        
+end
+
+function debugDraw()
     local text = ""
     text = text.."Curent tetromino: "..currentTetromino.."\n"
     text = text.."Next tetromino: "..nextTetromino.."\n"
     text = text.."Tetromino rotation: "..currentTetrominoRotation.."\n"
     text = text.."Tetromino position: ("..currentTetrominoPosition[1]..","..currentTetrominoPosition[2]..")\n"
     text = text.."Anim frame: "..animFrame.."\n"
+    love.graphics.print(text, 800, 0)
+    
     if board ~= nil and currentTetromino > -1 then
-        local debugBoard = deepCopy(board)
+        local debugBoard = utility.deepCopy(board)
         for y = 1, 4 do
             for x = 1, 4 do
                 if x + currentTetrominoPosition[1] >= 1 and x + currentTetrominoPosition[1] <= 10 and y + currentTetrominoPosition[2] >= 1 and y + currentTetrominoPosition[2] <= 20 then
-                    debugBoard[y + currentTetrominoPosition[2]][x + currentTetrominoPosition[1]] = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+                    if tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x] > -1 then
+                        debugBoard[y + currentTetrominoPosition[2]][x + currentTetrominoPosition[1]] = tetrominos[currentTetromino + 1][currentTetrominoRotation + 1][y][x]
+                    end
                 end
             end
         end
         text = text.."1 | "
+        love.graphics.setColor(1, 0, 0)
         for y = 1, #debugBoard do
+            love.graphics.print(y, 8 * 32 + 9, 4 * 32 + y * 32 + 9)
             for x = 1, #debugBoard[y] do
-                text = text..debugBoard[y][x]..", "
+                love.graphics.print(debugBoard[y][x], 9 * 32 + x * 32 + 9, 4 * 32 + y * 32 + 9)
             end
-            text = text.."\n"..(y + 1).." | "
         end
+        love.graphics.setColor(1, 1, 1)
     end
-    text = text.."\n"..debugText
-    love.graphics.print(text, 0, 0)
 end
 
 function resetVariables()
@@ -208,6 +264,8 @@ end
 -- ---------------------
 --        Intro
 -- ---------------------
+
+-- TODO
 
 -- ---------------------
 --         Menu
@@ -310,19 +368,6 @@ function game_update()
             table.insert(toDraw, Sprite:new(breakLineAnimSpritesheet, 10, 4 + y, (#linesToBreak - 1) * 10, animFrame, 10, 1))
         end
         
-        -- DEBUG
-        debugText = ""
-        for i, y in pairs(linesToBreak) do
-            local realY = y - i + 1
-            
-            if realY - 1 >= 1 then
-                debugText = debugText.."remove bottoms from "..(realY - 1)..", \n"
-            end
-            debugText = debugText.."remove row "..(realY)..", \n"
-            if realY + 1 <= 20 then
-                debugText = debugText.."remove tops from "..(realY + 1)..", \n"
-            end
-        end
         return
     end
     
@@ -566,7 +611,7 @@ function placeTetromino()
             end
         end
         if fragmentsCount == 10 then
-            table.insert(linesToBreak, y)
+            table.insert(linesToBreak, 1, y)
         end
     end
 end
@@ -574,23 +619,24 @@ end
 function breakLines()
     -- remove and update fragments
     for i, y in pairs(linesToBreak) do
-        local realY = y - i + 1
-        
-        if realY - 1 >= 1 then
+        if y - 1 >= 1 then
             for x = 1, 10 do
-                if board[realY - 1][x] > -1 then
-                    board[realY - 1][x] = bit.band(board[realY - 1][x], bit.bnot(2))
+                if board[y - 1][x] > -1 then
+                    board[y - 1][x] = bit.band(board[y - 1][x], bit.bnot(2))
                 end
             end
         end
-        if realY + 1 <= 20 then
+        if y + 1 <= 20 and y + 1 <= #board then
             for x = 1, 10 do
-                if board[realY + 1][x] > -1 then
-                    board[realY + 1][x] = bit.band(board[realY - 1][x], bit.bnot(4))
+                if board[y + 1][x] > -1 then
+                    board[y + 1][x] = bit.band(board[y + 1][x], bit.bnot(8))
                 end
             end
         end
-        table.remove(board, realY)
+        table.remove(board, y)
+    end
+    
+    for i = 1, #linesToBreak do
         table.insert(board, 1, {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,})
     end
     
@@ -607,17 +653,16 @@ function breakLines()
     end
     level = math.floor(linesCount[1] / 30)
     
-    linesToBreak = {}
-end
-
-function deepCopy(original)
-    local copy = {}
-    for key, value in pairs(original) do
-        if type(value) == "table" then
-            copy[key] = deepCopy(value)
-        else
-            copy[key] = value
-        end
+    -- count points
+    if #linesToBreak == 1 then
+        points[1] = points[1] + 1
+    elseif #linesToBreak == 2 then
+        points[1] = points[1] + 4
+    elseif #linesToBreak == 3 then
+        points[1] = points[1] + 6
+    elseif #linesToBreak == 4 then
+        points[1] = points[1] + 8
     end
-    return copy
+    
+    linesToBreak = {}
 end
