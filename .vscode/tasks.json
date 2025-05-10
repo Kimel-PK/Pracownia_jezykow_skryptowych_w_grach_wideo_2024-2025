@@ -26,6 +26,19 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Uruchom zadanie 4 - Mario (Ruby2D)",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}\\ruby\\"
+      },
+      "command": "ruby main.rb",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }
