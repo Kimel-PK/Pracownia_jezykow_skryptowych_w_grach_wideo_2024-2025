@@ -15,16 +15,16 @@ LEVEL_MAP = [
     "",
     "",
     "",
-    "                      ?                                                         XXXXXXXXX   XXX?",
-    "",
-    "",
-    "",
-    "                ?   X?X?X                     ╒╕         ╒╕                  X?X               ?",
-    "                                      ╒╕      ├┤         ├┤",
-    "                            ╒╕        ├┤      ├┤         ├┤",
-    "                            ├┤        ├┤      ├┤         ├┤",
-    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  OOOOOOOOOOOOOOOO   OOOOOO",
-    "#####################################################################  ################   ######"
+    "                      ?                                                         XXXXXXXXX   XXX?              ?           XXX    X??X                                                        BB",
+    "                                                                                                                                                                                            BBB",
+    "                                                                                                                                                                                           BBBB",
+    "                                                                                                                                                                                          BBBBB",
+    "                ?   X?X?X                     ╒╕         ╒╕                  X?X               ?     XX    ?  ?  ?     X          XX      B  B          BB  B            XX?X            BBBBBB",
+    "                                      ╒╕      ├┤         ├┤                                                                              BB  BB        BBB  BB                          BBBBBBB",
+    "                            ╒╕        ├┤      ├┤         ├┤                                                                             BBB  BBB      BBBB  BBB     ╒╕              ╒╕ BBBBBBBB",
+    "                            ├┤        ├┤      ├┤         ├┤                                                                            BBBB  BBBB    BBBBB  BBBB    ├┤              ├┤BBBBBBBBB        B",
+    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  OOOOOOOOOOOOOOOO   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+    "#####################################################################  ################   ################################################################  ###########################################################"
 ]
 
 tileset = Tileset.new(
