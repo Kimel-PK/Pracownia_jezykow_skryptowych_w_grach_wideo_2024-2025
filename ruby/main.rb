@@ -1,6 +1,7 @@
 require 'ruby2d'
 
 set title: "Ruby2D Mario", width: 512, height: 480
+set background: [0.360, 0.580, 0.988, 1.0]
 
 # Constants
 TILE_SIZE = 32
@@ -39,18 +40,30 @@ tileset.define_tile('grass_top', 0, 0)
 tileset.define_tile('dirt', 2, 6)
 tileset.define_tile('brick', 2, 9)
 tileset.define_tile('question_mark_block', 3, 9)
+tileset.define_tile('question_mark_block_collected', 5, 9)
 tileset.define_tile('pipe_top_left', 4, 6)
 tileset.define_tile('pipe_top_right', 5, 6)
 tileset.define_tile('pipe_left', 4, 7)
 tileset.define_tile('pipe_right', 5, 7)
 tileset.define_tile('undefined', 4, 9)
 
+# Block collisions and types
+class Block
+  attr_reader :collider
+  attr_accessor :type
+
+  def initialize(collider, type)
+    @collider = collider
+    @type = type
+  end
+end
+
 # Player
 player = Rectangle.new(
-    x: TILE_SIZE * 2,
-    y: TILE_SIZE * 11,
-    width: TILE_SIZE,
-    height: TILE_SIZE * 2,
+    x: TILE_SIZE * 0.8 * 2,
+    y: TILE_SIZE * 0.8 * 11,
+    width: TILE_SIZE * 0.8,
+    height: TILE_SIZE * 0.8 * 2,
     color: 'blue'
 )
 
@@ -73,34 +86,37 @@ def create_level(blocks, tiles)
                 next
             end
             
+            tile_type = case char
+            when "#"
+                "dirt"
+            when "O"
+                "grass_top"
+            when "X"
+                "brick"
+            when "?"
+                "question_mark_block"
+            when "╒"
+                "pipe_top_left"
+            when "╕"
+                "pipe_top_right"
+            when "├"
+                "pipe_left"
+            when "┤"
+                "pipe_right"
+            else
+                "undefined"
+            end
+            
+            # Graphics tile
+            tiles[tile_type] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
+            
             # Collision box
-            blocks << Square.new(
+            blocks << Block.new(Square.new(
                 x: x * TILE_SIZE,
                 y: y * TILE_SIZE,
                 size: TILE_SIZE,
                 color: [1, 0, 0, 0]
-            )
-            
-            # Graphics tile
-            if char == "#"
-                tiles["dirt"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "O"
-                tiles["grass_top"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "X"
-                tiles["brick"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "?"
-                tiles["question_mark_block"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "╒"
-                tiles["pipe_top_left"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "╕"
-                tiles["pipe_top_right"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "├"
-                tiles["pipe_left"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            elsif char == "┤"
-                tiles["pipe_right"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            else
-                tiles["undefined"] << { x: x * TILE_SIZE, y: y * TILE_SIZE }
-            end
+            ), tile_type)
         end
     end
 end
@@ -166,34 +182,65 @@ update do
     # Check collisions
     on_ground = false
     
+    block_to_remove = nil
+    
     # Vertical collisions
     blocks.each do |block|
-        if aabb_collision?(player, block)
+        collider = block.collider
+        type = block.type
+        
+        if aabb_collision?(player, collider)
             # Collision from falling
-            if player_vy > 0 && player.y + player.height > block.y
-                player.y = block.y - player.height
+            if player_vy > 0 && player.y + player.height > collider.y
+                player.y = collider.y - player.height
                 player_vy = 0
                 on_ground = true
             end
 
             # Collision from jumping
-            if player_vy < 0 && player.y < block.y + block.height
-                player.y = block.y + block.height
+            if player_vy < 0 && player.y < collider.y + collider.height
+                if type == "brick" or type == "question_mark_block"
+                    block_to_remove = block
+                end
+                player.y = collider.y + collider.height
                 player_vy = 0
             end
         end
     end
     
-    player.x += dx
+    if block_to_remove
+        case block_to_remove&.type
+        when "brick"
+            points += 50
+            blocks.delete(block_to_remove) 
+            tiles[block_to_remove&.type].delete_if do |tile|
+                tile[:x] == block_to_remove.collider.x && tile[:y] == block_to_remove.collider.y
+            end
+        when "question_mark_block"
+            points += 200
+            block_to_remove.type = "question_mark_block_collected"
+            tiles[block_to_remove&.type].delete_if do |tile|
+                tile[:x] == block_to_remove.collider.x && tile[:y] == block_to_remove.collider.y
+            end
+            tiles["question_mark_block_collected"] << { x: block_to_remove.collider.x, y: block_to_remove.collider.y }
+        end
         
+        # Update hud
+        hud.text = "Points: #{points}  Lives: #{lives}"
+    end
+    
+    player.x += dx
+    
     # Horizontal collisions
     blocks.each do |block|
-        if aabb_collision?(player, block)
+        collider = block.collider
+        
+        if aabb_collision?(player, collider)
             if dx > 0
-                # Moving right — push player to the left edge of block
+                # Moving right — push player to the left edge of collider
                 player.x -= MOVE_SPEED
             elsif dx < 0
-                # Moving left — push player to the right edge of block
+                # Moving left — push player to the right edge of collider
                 player.x += MOVE_SPEED
             end
         end
@@ -217,7 +264,8 @@ update do
 
     # Apply camera transform to collision blocks
     blocks.each do |block|
-        block.x -= camera_x
+        collider = block.collider
+        collider.x -= camera_x
     end
 
     player.x = 0 if player.x < 0
@@ -230,6 +278,10 @@ update do
         else
             # Lose life
             lives -= 1
+            if lives == 0
+                lives = 3
+                points = 0
+            end
             hud.text = "Points: #{points}  Lives: #{lives}"
             
             # Reset to start of level
