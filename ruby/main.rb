@@ -152,7 +152,6 @@ update do
         dx -= MOVE_SPEED if keys['left']
         dx += MOVE_SPEED if keys['right']
     end
-    player.x += dx
 
     # Jump
     if keys['space'] && on_ground
@@ -166,8 +165,9 @@ update do
 
     # Check collisions
     on_ground = false
+    
+    # Vertical collisions
     blocks.each do |block|
-        # Vertical collisions
         if aabb_collision?(player, block)
             # Collision from falling
             if player_vy > 0 && player.y + player.height > block.y
@@ -182,8 +182,12 @@ update do
                 player_vy = 0
             end
         end
+    end
+    
+    player.x += dx
         
-        # Horizontal collisions
+    # Horizontal collisions
+    blocks.each do |block|
         if aabb_collision?(player, block)
             if dx > 0
                 # Moving right — push player to the left edge of block
