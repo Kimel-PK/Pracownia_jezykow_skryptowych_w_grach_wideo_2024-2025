@@ -41,7 +41,7 @@ Należy stworzyć grę Tetris w Lua na frameworku [Löve](https://love2d.org/).
 
 [Folder zadania - /ruby](ruby)
 
-- :x: 3.0 Należy stworzyć jeden poziom z przeszkodami oraz dziurami, w które można wpaść i zginąć
+- :white_check_mark: 3.0 Należy stworzyć jeden poziom z przeszkodami oraz dziurami, w które można wpaść i zginąć [#b52947f](https://github.com/Kimel-PK/Pracownia_jezykow_skryptowych_w_grach_wideo_2024-2025/commit/b52947f19d6441fd3287aa70bb9e5993f48eafb5)
 - :x: 3.5 Należy dodać opcję zbierania punktów
 - :x: 4.0 Należy dodać przeciwników, których można zabić oraz 3 życia
 - :x: 4.5 Ładowanie poziomów z pliku
