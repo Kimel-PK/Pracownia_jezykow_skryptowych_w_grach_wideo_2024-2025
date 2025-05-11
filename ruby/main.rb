@@ -10,23 +10,7 @@ JUMP_FORCE = -10
 MOVE_SPEED = 3
 
 # Level map
-LEVEL_MAP = [
-    "",
-    "",
-    "",
-    "",
-    "",
-    "                      ?                                                         XXXXXXXXX   XXX?              ?           XXX    X??X                                                        BB",
-    "                                                                                                                                                                                            BBB",
-    "                                                                                                                                                                                           BBBB",
-    "                                                                                                                                                                                          BBBBB",
-    "                ?   X?X?X                     ╒╕         ╒╕                  X?X               ?     XX    ?  ?  ?     X          XX      B  B          BB  B            XX?X            BBBBBB",
-    "                                      ╒╕      ├┤         ├┤                                                                              BB  BB        BBB  BB                          BBBBBBB",
-    "                            ╒╕        ├┤      ├┤         ├┤                                                                             BBB  BBB      BBBB  BBB     ╒╕              ╒╕ BBBBBBBB",
-    "                            ├┤        ├┤      ├┤         ├┤                                                                            BBBB  BBBB    BBBBB  BBBB    ├┤              ├┤BBBBBBBBB        B",
-    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  OOOOOOOOOOOOOOOO   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
-    "#####################################################################  ################   ################################################################  ###########################################################"
-]
+LEVEL_MAP = File.readlines("level.txt", chomp: true)
 
 tileset = Tileset.new(
     'assets/tiles.png',
