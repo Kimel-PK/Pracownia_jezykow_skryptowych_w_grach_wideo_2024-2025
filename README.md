@@ -47,6 +47,17 @@ Należy stworzyć grę Tetris w Lua na frameworku [Löve](https://love2d.org/).
 - :white_check_mark: 4.5 Ładowanie poziomów z pliku [#ea24d5e](https://github.com/Kimel-PK/Pracownia_jezykow_skryptowych_w_grach_wideo_2024-2025/commit/ea24d5ef3729a3d6b39f8d26701f374b52ff9752)
 - :x: 5.0 Generator poziomów
 
-## **Zadanie 5** TBA
+## **Zadanie 5** Czatbot Rasa Resturacja
 
-???
+[Folder zadania - /python](python)
+
+Czatbot powinien być zintegrowany z minimum jednym czatem: slack,
+discord, messenger, ale nalezy wykorzystać framework [Rasa](https://rasa.com/).
+
+- :x: 3.0 Nalezy zaimplementować minimum 3 ściezki (stories) - wykrywać
+intencję (intent)
+- :x: 3.5 Informację o godzinach otwarcia restauracji nalezy pobierać z
+pliku (action)
+- :x: 4.0 Bot potrafi wyświetlić menu z pliku
+- :x: 4.5 Bot potrafi zebrać zamówienie i je podsumować
+- :x: 5.0 Bot potrafi zebrać adres dostawy

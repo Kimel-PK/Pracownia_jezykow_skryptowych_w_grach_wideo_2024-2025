@@ -39,6 +39,40 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Uruchom zadanie 5 - Czatbot Rasa Resturacja - Aktywuj endpointy",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}\\python\\"
+      },
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "venv\\Scripts\\activate && rasa run actions"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Uruchom zadanie 5 - Czatbot Rasa Resturacja - Uruchom bota",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}\\python\\"
+      },
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "venv\\Scripts\\activate && python bot.py"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }
