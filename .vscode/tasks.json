@@ -58,6 +58,23 @@
       }
     },
     {
+      "label": "Uruchom zadanie 5 - Czatbot Rasa Resturacja - Trenuj model",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}\\python\\"
+      },
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "venv\\Scripts\\activate && rasa train --fixed-model-name chatbot"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
       "label": "Uruchom zadanie 5 - Czatbot Rasa Resturacja - Uruchom bota",
       "type": "shell",
       "options": {

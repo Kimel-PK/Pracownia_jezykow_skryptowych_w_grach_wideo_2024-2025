@@ -1,13 +1,30 @@
 version: "3.1"
 
 rules:
+  - rule: Powitanie
+    conversation_start: true
+    steps:
+      - intent: greet
+      - action: utter_greet
+      
+  - rule: Pożegnanie
+    steps:
+      - intent: goodbye
+      - action: utter_goodbye
 
-- rule: Say goodbye anytime the user says goodbye
-  steps:
-  - intent: goodbye
-  - action: utter_goodbye
+  - rule: Pokaż godziny otwarcia
+    steps:
+      - intent: open_hours
+      - action: action_opening_hours
+      
+  - rule: Pokaż menu
+    steps:
+      - intent: menu
+      - action: action_show_menu
 
-- rule: Say 'I am a bot' anytime the user challenges
-  steps:
-  - intent: bot_challenge
-  - action: utter_iamabot
+  - rule: Potwierdzenie złożenia zamówienia
+    steps:
+      - intent: place_order
+      - action: utter_place_order
+      - slot_was_set:
+        - meal: null

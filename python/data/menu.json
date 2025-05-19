@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Pizza Margherita",
+    "price": "25.00 PLN",
+    "ingredients": ["sos pomidorowy", "ser mozzarella", "bazylia"]
+  },
+  {
+    "name": "Spaghetti Carbonara",
+    "price": "32.00 PLN",
+    "ingredients": ["makaron", "boczek", "parmezan", "jajko", "pieprz"]
+  },
+  {
+    "name": "Sałatka Grecka",
+    "price": "22.00 PLN",
+    "ingredients": ["sałata", "pomidor", "ogórek", "ser feta", "oliwki"]
+  },
+  {
+    "name": "Pizza Pepperoni",
+    "price": "29.00 PLN",
+    "ingredients": ["sos pomidorowy", "ser mozzarella", "pepperoni"]
+  },
+  {
+    "name": "Lasagne Bolognese",
+    "price": "35.00 PLN",
+    "ingredients": ["makaron", "sos bolognese", "beszamel", "ser mozzarella"]
+  },
+  {
+    "name": "Zupa pomidorowa",
+    "price": "14.00 PLN",
+    "ingredients": ["bulion warzywny", "pomidor", "śmietana", "makaron"]
+  },
+  {
+    "name": "Kotlet schabowy z ziemniakami",
+    "price": "36.00 PLN",
+    "ingredients": ["schab", "bułka tarta", "jajko", "ziemniaki", "kapusta kiszona"]
+  },
+  {
+    "name": "Pierogi ruskie",
+    "price": "24.00 PLN",
+    "ingredients": ["ciasto pierogowe", "ziemniaki", "twaróg", "cebula"]
+  },
+  {
+    "name": "Deser Tiramisu",
+    "price": "18.00 PLN",
+    "ingredients": ["biszkopty", "kawa", "likier amaretto", "mascarpone", "kakao"]
+  },
+  {
+    "name": "Sok pomarańczowy świeżo wyciskany",
+    "price": "12.00 PLN",
+    "ingredients": ["pomarańcze"]
+  },
+  {
+    "name": "Herbata z cytryną",
+    "price": "8.00 PLN",
+    "ingredients": ["czarna herbata", "cytryna"]
+  },
+  {
+    "name": "Pizza Capricciosa",
+    "price": "30.00 PLN",
+    "ingredients": ["sos pomidorowy", "szynka", "pieczarki", "ser mozzarella"]
+  },
+  {
+    "name": "Risotto z grzybami",
+    "price": "34.00 PLN",
+    "ingredients": ["ryż arborio", "bulion", "grzyby leśne", "parmezan"]
+  },
+  {
+    "name": "Zupa krem z dyni",
+    "price": "16.00 PLN",
+    "ingredients": ["dynia", "śmietana", "imbir", "czosnek"]
+  },
+  {
+    "name": "Grillowany łosoś z warzywami",
+    "price": "42.00 PLN",
+    "ingredients": ["łosoś", "cukinia", "papryka", "cytryna", "oliwa z oliwek"]
+  }
+]

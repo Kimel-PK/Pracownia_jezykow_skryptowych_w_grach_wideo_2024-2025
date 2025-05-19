@@ -3,89 +3,62 @@ version: "3.1"
 nlu:
 - intent: greet
   examples: |
-    - hey
-    - hello
-    - hi
-    - hello there
-    - good morning
-    - good evening
-    - moin
-    - hey there
-    - let's go
-    - hey dude
-    - goodmorning
-    - goodevening
-    - good afternoon
+    - cześć
+    - hej
+    - dzień dobry
+    - witaj
+    - siema
+    - dobry wieczór
 
 - intent: goodbye
   examples: |
-    - cu
-    - good by
-    - cee you later
-    - good night
-    - bye
-    - goodbye
-    - have a nice day
-    - see you around
-    - bye bye
-    - see you later
+    - do widzenia
+    - na razie
+    - pa
+    - trzymaj się
+    - do zobaczenia
+    - miłego dnia
 
 - intent: affirm
   examples: |
-    - yes
-    - y
-    - indeed
-    - of course
-    - that sounds good
-    - correct
+    - tak
+    - zgadzam się
+    - dokładnie
+    - oczywiście
+    - jasne
+    - pewnie
+    - racja
 
 - intent: deny
   examples: |
-    - no
-    - n
-    - never
-    - I don't think so
-    - don't like that
-    - no way
-    - not really
+    - nie
+    - nie zgadzam się
+    - wcale nie
+    - absolutnie nie
+    - raczej nie
+    - nie sądzę
 
-- intent: mood_great
+- intent: place_order
   examples: |
-    - perfect
-    - great
-    - amazing
-    - feeling like a king
-    - wonderful
-    - I am feeling very good
-    - I am great
-    - I am amazing
-    - I am going to save the world
-    - super stoked
-    - extremely good
-    - so so perfect
-    - so good
-    - so perfect
+    - chciałbym zamówić [pizzę](meal)
+    - poproszę [burgera](meal)
+    - zamówię [frytki](meal) i [colę](meal)
+    - chcę złożyć zamówienie
+    - zamów mi [makaron](meal)
+    - wezmę [zestaw lunchowy](meal)
 
-- intent: mood_unhappy
+- intent: open_hours
   examples: |
-    - my day was horrible
-    - I am sad
-    - I don't feel very well
-    - I am disappointed
-    - super sad
-    - I'm so sad
-    - sad
-    - very sad
-    - unhappy
-    - not good
-    - not very good
-    - extremly sad
-    - so saad
-    - so sad
+    - w jakich godzinach jesteście otwarci?
+    - kiedy macie otwarte?
+    - jakie są godziny otwarcia?
+    - o której otwieracie?
+    - do której jesteście dziś czynni?
 
-- intent: bot_challenge
+- intent: menu
   examples: |
-    - are you a bot?
-    - are you a human?
-    - am I talking to a bot?
-    - am I talking to a human?
+    - co macie w menu?
+    - pokaż mi menu
+    - jakie dania oferujecie?
+    - co dzisiaj podajecie?
+    - mogę zobaczyć wasze menu?

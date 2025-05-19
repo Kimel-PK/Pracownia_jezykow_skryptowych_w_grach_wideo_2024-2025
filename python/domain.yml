@@ -5,29 +5,33 @@ intents:
   - goodbye
   - affirm
   - deny
-  - mood_great
-  - mood_unhappy
-  - bot_challenge
+  - menu
+  - open_hours
+  - place_order
+
+entities:
+  - meal
+
+slots:
+  meal:
+    type: text
+    mappings:
+      - type: from_entity
+        entity: meal
 
 responses:
   utter_greet:
-  - text: "Hey! How are you?"
+  - text: "Witaj! W czym mogę pomóc?"
 
-  utter_cheer_up:
-  - text: "Here is something to cheer you up:"
-    image: "https://i.imgur.com/nGF1K8f.jpg"
-
-  utter_did_that_help:
-  - text: "Did that help you?"
-
-  utter_happy:
-  - text: "Great, carry on!"
+  utter_place_order:
+  - text: "Dziękujemy za zamówienie {meal} w naszej restauracji\nŻyczymy smacznego!"
 
   utter_goodbye:
-  - text: "Bye"
+  - text: "Do zobaczenia wkrótce!"
 
-  utter_iamabot:
-  - text: "I am a bot, powered by Rasa."
+actions:
+  - action_show_menu
+  - action_opening_hours
 
 session_config:
   session_expiration_time: 60
