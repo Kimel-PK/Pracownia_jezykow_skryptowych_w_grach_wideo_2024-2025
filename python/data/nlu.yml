@@ -47,7 +47,7 @@ nlu:
     - zamów mi [makaron](meal)
     - wezmę [zestaw lunchowy](meal)
 
-- intent: open_hours
+- intent: opening_hours
   examples: |
     - w jakich godzinach jesteście otwarci?
     - kiedy macie otwarte?

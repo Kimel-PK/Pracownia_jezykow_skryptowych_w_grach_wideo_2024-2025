@@ -6,3 +6,30 @@ stories:
   steps:
   - intent: greet
   - action: utter_greet
+
+- story: Meal order
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: place_order
+    - action: utter_place_order
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: Ask about hours
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: opening_hours
+    - action: action_opening_hours
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: Ask about menu
+  steps:
+    - intent: greet
+    - action: utter_greet
+    - intent: menu
+    - action: action_show_menu
+    - intent: goodbye
+    - action: utter_goodbye

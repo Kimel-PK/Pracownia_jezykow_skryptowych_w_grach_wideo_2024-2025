@@ -6,7 +6,7 @@ intents:
   - affirm
   - deny
   - menu
-  - open_hours
+  - opening_hours
   - place_order
 
 entities:
