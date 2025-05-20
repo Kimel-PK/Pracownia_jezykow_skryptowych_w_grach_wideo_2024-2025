@@ -15,6 +15,19 @@
       }
     },
     {
+      "label": "Uruchom zadanie 2 - Frontend (NodeJS)",
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}\\nodejs\\frontend"
+      },
+      "command": "npm start",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
       "label": "Uruchom zadanie 3 - Tetris (Lua)",
       "type": "shell",
       "options": {
