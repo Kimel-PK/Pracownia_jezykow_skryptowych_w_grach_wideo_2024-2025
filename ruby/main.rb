@@ -9,6 +9,87 @@ GRAVITY = 0.35
 JUMP_FORCE = -10
 MOVE_SPEED = 3
 
+# Player
+player = Rectangle.new(
+    x: TILE_SIZE * 0.8 * 2,
+    y: TILE_SIZE * 0.8 * 11,
+    width: TILE_SIZE * 0.8,
+    height: TILE_SIZE * 0.8 * 2,
+    color: 'blue'
+)
+
+player_vy = 0
+on_ground = false
+died = false
+points = 0
+lives = 3
+
+# Enemy
+class Enemy
+    attr_accessor :sprite, :vx, :vy, :alive
+
+    def initialize(x, y)
+        @sprite = Square.new(
+            x: x,
+            y: y,
+            size: TILE_SIZE,
+            color: 'red',
+            z: 50
+        )
+        @vx = -1.5
+        @vy = 0
+        @alive = true
+    end
+
+    def on_screen?(camera_x)
+        screen_x = @sprite.x - camera_x
+        screen_x + @sprite.width > 0 && screen_x < Window.width
+    end
+  
+    def move(blocks, camera_x)
+        return unless on_screen?(camera_x)
+
+        # Apply gravity
+        @vy += GRAVITY
+        @sprite.y += @vy
+
+        # Vertical collisions
+        blocks.each do |block|
+            if aabb_collision?(@sprite, block.collider)
+                if @vy > 0
+                    # falling — land on block
+                    @sprite.y = block.collider.y - @sprite.height
+                    @vy = 0
+                elsif @vy < 0
+                    # hit ceiling — bounce off
+                    @sprite.y = block.collider.y + block.collider.height
+                    @vy = 0
+                end
+            end
+        end
+
+        # Horizontal movement
+        @sprite.x += @vx
+
+        blocks.each do |block|
+            if aabb_collision?(@sprite, block.collider)
+                @vx *= -1
+                @sprite.x += @vx
+                break
+            end
+        end
+        
+        if @sprite.y > 500
+            @alive = false
+            @sprite.remove
+        end
+    end
+
+    def update_camera_offset(camera_x)
+        @sprite.x -= camera_x
+    end
+end
+
 # Level map
 LEVEL_MAP = File.readlines("level.txt", chomp: true)
 
@@ -33,35 +114,34 @@ tileset.define_tile('undefined', 4, 9)
 
 # Block collisions and types
 class Block
-  attr_reader :collider
-  attr_accessor :type
+    attr_reader :collider
+    attr_accessor :type
 
-  def initialize(collider, type)
-    @collider = collider
-    @type = type
-  end
+    def initialize(collider, type)
+        @collider = collider
+        @type = type
+    end
 end
-
-# Player
-player = Rectangle.new(
-    x: TILE_SIZE * 0.8 * 2,
-    y: TILE_SIZE * 0.8 * 11,
-    width: TILE_SIZE * 0.8,
-    height: TILE_SIZE * 0.8 * 2,
-    color: 'blue'
-)
-
-player_vy = 0
-on_ground = false
-died = false
 
 blocks = []
 tiles = Hash.new { |hash, key| hash[key] = [] }
+enemies = []
+won = false
+win_timer = 0
+level_progress = 0
+win_overlay = Rectangle.new(x: 0, y: 0, width: Window.width, height: Window.height, color: 'black', z: 200)
+win_text = Text.new("You won!", x: Window.width / 2 - 70, y: Window.height / 2 - 20, size: 30, color: 'white', z: 201)
+win_overlay.color = [0, 0, 0, 0]
+win_text.color = [1, 1, 1, 0]
 
-def create_level(blocks, tiles)
+def create_level(blocks, tiles, enemies)
     # Clear arrays
     blocks.clear
     tiles.clear
+    enemies.each do |enemy|
+        enemy.sprite.remove
+    end
+    enemies.clear
     
     # Create level tiles
     LEVEL_MAP.each_with_index do |row, y|
@@ -87,6 +167,9 @@ def create_level(blocks, tiles)
                 "pipe_left"
             when "┤"
                 "pipe_right"
+            when "E"
+                enemies << Enemy.new(x * TILE_SIZE, y * TILE_SIZE)
+                next
             else
                 "undefined"
             end
@@ -130,10 +213,7 @@ def aabb_collision?(a, b)
 end
 
 # Main
-create_level(blocks, tiles)
-
-points = 0
-lives = 3
+create_level(blocks, tiles, enemies)
 
 hud = Text.new(
     "Points: #{points}  Lives: #{lives}",
@@ -145,6 +225,28 @@ hud = Text.new(
 )
 
 update do
+    if won
+        win_overlay.color = [0, 0, 0, 1]
+        win_text.color = [1, 1, 1, 1]
+
+        if win_timer <= 0
+            won = false
+            points = 0
+            lives = 3
+            hud.text = "Points: #{points}  Lives: #{lives}"
+            player.x = TILE_SIZE * 2
+            player.y = TILE_SIZE * 11
+            player_vy = 0
+            died = false
+            win_overlay.color = [0, 0, 0, 0]
+            win_text.color = [1, 1, 1, 0]
+            level_progress = 0
+            create_level(blocks, tiles, enemies)
+        end
+
+        win_timer -= 1
+        next
+    end
     
     # Movement
     dx = 0
@@ -215,6 +317,40 @@ update do
     
     player.x += dx
     
+    enemies.each do |enemy|
+        next unless enemy.alive
+
+        enemy.move(blocks, camera_x)
+
+        # Check if player stomps enemy
+        if aabb_collision?(player, enemy.sprite)
+            if player_vy > 0
+                # Stomp enemy
+                player_vy = JUMP_FORCE / 2
+                enemy.alive = false
+                enemy.sprite.remove
+                points += 100
+                hud.text = "Points: #{points}  Lives: #{lives}"
+            else
+                # Hit by enemy
+                lives -= 1
+                if lives == 0
+                    lives = 3
+                    points = 0
+                end
+                hud.text = "Points: #{points}  Lives: #{lives}"
+                
+                # Reset to start of level
+                create_level(blocks, tiles, enemies)
+                player.x = TILE_SIZE * 2
+                player.y = TILE_SIZE * 11
+                died = false
+                level_progress = 0
+                break
+            end
+        end
+    end
+    
     # Horizontal collisions
     blocks.each do |block|
         collider = block.collider
@@ -251,6 +387,10 @@ update do
         collider = block.collider
         collider.x -= camera_x
     end
+    
+    enemies.each do |enemy|
+        enemy.update_camera_offset(camera_x) if enemy.alive
+    end
 
     player.x = 0 if player.x < 0
     player.x -= camera_x
@@ -269,11 +409,18 @@ update do
             hud.text = "Points: #{points}  Lives: #{lives}"
             
             # Reset to start of level
-            create_level(blocks, tiles)
+            create_level(blocks, tiles, enemies)
             player.x = TILE_SIZE * 2
             player.y = TILE_SIZE * 11
             died = false
+            level_progress = 0
         end
+    end
+    
+    level_progress += camera_x
+    if level_progress > 6200 && !won
+        won = true
+        win_timer = 120
     end
 end
 
